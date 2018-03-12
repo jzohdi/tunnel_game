@@ -71,6 +71,7 @@ var cb = canvas.getContext('2d');
 // control width of tunnel for Ship
 
 var gap = 200;
+var gapWhenEasy = 170;
 // var center = innerWidth/2
 var center;
 var gravity = 2.0;
@@ -184,6 +185,35 @@ function RightWall(xEdge, dy, whenToPush){
   }
 }
 
+function decideTunnelWidth(oldCenter, center){
+  if (center >= oldCenter + 34 || center <= oldCenter - 34){
+    return 270;
+  }
+  if (center >= oldCenter + 31 || center <= oldCenter - 31){
+    return 260;
+  }
+  if (center >= oldCenter + 28 || center <= oldCenter - 28){
+    return 250;
+  }
+  if (center >= oldCenter + 25 || center <= oldCenter - 25){
+    return 240;
+  }
+  if (center >= oldCenter + 22 || center <= oldCenter - 22){
+    return 230;
+  }
+  if (center >= oldCenter + 19 || center <= oldCenter - 19){
+    return 216;
+  }
+  if (center >= oldCenter + 16 || center <= oldCenter - 16){
+    return 204;
+  }
+  if (center >= oldCenter + 13 || center <= oldCenter - 13){
+    return 190;
+  }
+  else {
+    return gapWhenEasy;
+  }
+}
 // console.log(Math.trunc(20/1.5))
 // var animationTimer = ;
 
@@ -195,11 +225,13 @@ var xx = 0.10;
 function pushLeftWall(){
 
   xx += 1;
-
+  var oldCenter = center;
   var moveTunnel = generator.getVal(xx)*innerWidth
   if (moveTunnel > (gap/2) && moveTunnel < (innerWidth - (gap/2))){
     center = moveTunnel;
   }
+  // console.log(center)
+  gap = decideTunnelWidth(oldCenter, center);
   var whenToPushL = getDeci((-18 + (Math.trunc(18/gravity)*gravity)));
   var wallLength = getRndInteger(center - (gap/2) - howJagged,
                                 center - (gap/2) + howJagged);
@@ -232,7 +264,7 @@ window.addEventListener("mousemove", function(){
 pushLeftWall();
 pushRightWall();
 
-console.log(rightArray[0])
+// console.log(rightArray[0])
 
 function animate(){
   requestAnimationFrame(animate);

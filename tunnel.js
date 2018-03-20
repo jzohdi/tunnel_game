@@ -2,6 +2,7 @@
 /*
  *https://www.michaelbromley.co.uk/blog/simple-1d-noise-in-javascript/
  */
+ function init(){
 var Simple1DNoise = function() {
     var MAX_VERTICES = 256;
     var MAX_VERTICES_MASK = MAX_VERTICES -1;
@@ -284,3 +285,6 @@ function animate(){
 }
 
 animate();
+}
+
+init();

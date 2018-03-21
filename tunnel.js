@@ -187,17 +187,30 @@ function RightWall(xEdge, dy, whenToPush){
 }
 
 function decideTunnelWidth(oldCenter, center){
+  if (center >= oldCenter + 44 || center <= oldCenter -44){
+    console.log("big")
+    return 300;
+  }
+  if (center >= oldCenter + 41 || center <= oldCenter - 41){
+    return 285;
+  }
+  if(center >= oldCenter + 38 || center <= oldCenter - 38){
+    return 275;
+  }
   if (center >= oldCenter + 34 || center <= oldCenter - 34){
-    return 270;
+    return 267;
   }
   if (center >= oldCenter + 31 || center <= oldCenter - 31){
-    return 260;
-  }
-  if (center >= oldCenter + 28 || center <= oldCenter - 28){
+    console.log("needs inc")
     return 250;
   }
+  if (center >= oldCenter + 28 || center <= oldCenter - 28){
+    console.log("medium")
+    return 245;
+  }
   if (center >= oldCenter + 25 || center <= oldCenter - 25){
-    return 240;
+
+    return 235;
   }
   if (center >= oldCenter + 22 || center <= oldCenter - 22){
     return 230;

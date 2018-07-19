@@ -418,7 +418,7 @@ function animate(){
     gameEnd.score = score.score;
     gameEnd.update();
     restart.update();
-    if (device == "mobile"){
+    if (device == "desk"){
       window.addEventListener("click", function(){
         // console.log(event.clientX, event.clientY)
         // console.log(restart.size, restart.y, restart.x)
@@ -439,7 +439,7 @@ function animate(){
                 location.reload();
               }
             }
-        })
+        });
     }
   }
 }

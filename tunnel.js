@@ -79,7 +79,7 @@ function resizeEnd(){
     setTimeout(resizeEnd, delta);
   } else {
     timeout = false;
-    init();
+    location.reload();
   }
 };
 
@@ -349,23 +349,41 @@ function pushRightWall(){
 
 var myShip = new Ship(innerWidth/2, innerHeight*0.66, shipRadius);
 
-var mouseOrTouch;
+var device;
+var touchPosition;
 
 if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-    mouseOrTouch = "touchmove";
+    device = "mobile";
 }
 else{
-  mouseOrTouch = "mousemove"
+  device = "desk"
 }
-window.addEventListener(mouseOrTouch, function(e){
-    if (mouseOrTouch == "mousemove"){
-      myShip.x = event.clientX;
-    }
-    else {
-      var touch = e.touches[0]
-      myShip.x = touch.pageX;
-    }
-});
+
+if (device == "mobile"){
+  window.addEventListener("touchstart", function(e){
+
+    touchPosition = e.touches[0].clientX;
+  });
+  window.addEventListener("touchmove", function(e){
+    var movement = e.touches[0].pageX;
+    var positionChange = movement - touchPosition;
+    myShip.x += positionChange;
+    touchPosition = movement;
+  });
+} else {
+  window.addEventListener("mousemove", function(){
+    myShip.x = event.clientX;
+  })
+}
+// window.addEventListener(mouseOrTouch, function(e){
+//     if (mouseOrTouch == "mousemove"){
+//       myShip.x = event.clientX;
+//     }
+//     else {
+//       var touch = e.touches[0]
+//       myShip.x = touch.pageX;
+//     }
+// });
 
 // Initiate first walls on left and right
 pushLeftWall();
@@ -399,18 +417,29 @@ function animate(){
     gameEnd.score = score.score;
     gameEnd.update();
     restart.update();
-    window.addEventListener("click", function(){
-      // console.log(event.clientX, event.clientY)
-      // console.log(restart.size, restart.y, restart.x)
-      var clickX = event.clientX;
-      var clickY = event.clientY;
-      if(clickX >= restart.x && clickX <= restart.x + (restart.size*5)){
-        if (clickY >= restart.y - restart.size && clickY <= restart.y){
-          location.reload();
+    if (device == "mobile"){
+      window.addEventListener("click", function(){
+        // console.log(event.clientX, event.clientY)
+        // console.log(restart.size, restart.y, restart.x)
+        var clickX = event.clientX;
+        var clickY = event.clientY;
+        if(clickX >= restart.x && clickX <= restart.x + (restart.size*5)){
+          if (clickY >= restart.y - restart.size && clickY <= restart.y){
+            location.reload();
+          }
         }
-      }
-
-    })
+      });
+    } else {
+        window.addEventListener("touchstart", function(e){
+            var clickX = e.touches[0].clientX;
+            var clickY = e.touches[0].clientY;
+            if(clickX >= restart.x && clickX <= restart.x + (restart.size*5)){
+              if (clickY >= restart.y - restart.size && clickY <= restart.y){
+                location.reload();
+              }
+            }
+        })
+    }
   }
 }
 

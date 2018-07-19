@@ -360,6 +360,7 @@ else{
 }
 
 if (device == "mobile"){
+  // document.getElementById("deviceID").
   window.addEventListener("touchstart", function(e){
 
     touchPosition = e.touches[0].clientX;

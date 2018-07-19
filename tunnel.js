@@ -2,7 +2,7 @@
 /*
  *https://www.michaelbromley.co.uk/blog/simple-1d-noise-in-javascript/
  */
- function init(){
+function init(){
 var Simple1DNoise = function() {
     var MAX_VERTICES = 256;
     var MAX_VERTICES_MASK = MAX_VERTICES -1;
@@ -62,21 +62,60 @@ var canvas = document.getElementById('map-canvas')
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+var rtime;
+var timeout = false;
+var delta = 300;
+
 window.addEventListener("resize",function(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  rtime = new Date();
+  if(timeout === false){
+    timeout = true;
+    setTimeout(resizeEnd, delta);
+  }
 });
+
+function resizeEnd(){
+  if(new Date() - rtime < delta){
+    setTimeout(resizeEnd, delta);
+  } else {
+    timeout = false;
+    init();
+  }
+};
 
 var cb = canvas.getContext('2d');
 
 // control width of tunnel for Ship
 
-var gap = 200;
-var gapWhenEasy = 170;
+function scaleWidth(innerWidth){
+  if (innerWidth > 1000){
+    return [10, 200, 170]
+  }
+  else if (innerWidth > 800){
+    return [6, 150, 120]
+  }
+  else if(innerWidth > 600){
+    return [5, 120, 100]
+  }
+  else if (innerWidth > 500){
+    return [5, 110, 100]
+  }
+  else if (innerWidth <= 500){
+    return [5, 100, 90]
+  }
+}
+
+console.log(innerWidth);
+var scalers = scaleWidth(window.innerWidth)
+var shipRadius = scalers[0];
+var gap = scalers[1];
+var gapWhenEasy = scalers[2];
+
 // var center = innerWidth/2
 var center;
-var gravity = 2.0;
+var gravity = 2;
 var howJagged = 10;
+gameOver= false;
 // var tunnelDifficulty = 200;
 // var howFar = Math.trunc(20/gravity)
 // console.log(Math.trunc(20/2.5))
@@ -91,16 +130,17 @@ function getDeci(x) {
   return parseFloat(Number.parseFloat(x).toFixed(2));
 }
 
-function Ship(x, y){
+function Ship(x, y, radius){
   this.x = x;
   this.y = y;
-  this.radius = 10;
+  this.radius = radius;
   // this.dy = -0.5;
 
   this.draw = function(){
       cb.beginPath();
       cb.arc(this.x, this.y, this.radius, 0.2, Math.PI * 2, false);
       cb.strokeStyle = 'red';
+      cb.fillStyle = "black";
       cb.fill();
       cb.stroke();
   }
@@ -115,6 +155,29 @@ function Ship(x, y){
   }
 }
 
+function leftCollision(wallX, wallY, pointTwo) {
+var userY = pointTwo.y;
+var userX = pointTwo.x;
+var minLength = pointTwo.radius**2;
+
+if (((wallX - userX)**2 + (wallY - userY)**2
+ < minLength) || ((wallX - userX)**2 + (wallY + 10 - userX)**2
+ < minLength) || ((wallX - userX)**2 + (wallY + 20 - userX)**2
+ < minLength) || (userX < wallX && (wallY + 20) >= (userY - 10) && wallY <= (userY + 10))){
+//   return true;
+// }
+// if ((wallX - userX)**2 + (wallY + 10 - userX)**2 < minLength){
+//   return true;
+// }
+// if ((wallX - userX)**2 + (wallY + 20 - userX)**2 < minLength){
+//   return true;
+// }
+// if (userX < wallX && (wallY + 20) >= (userY - 10) && wallY <= (userY + 10)){
+  return 'red';
+}
+  return 'black';
+}
+
 function LeftWall(length, dy, whenToPush){
   this.length = length;
   this.y = -18.0;
@@ -126,11 +189,13 @@ function LeftWall(length, dy, whenToPush){
     if (((this.length - myShip.x)**2 + (this.y - myShip.y)**2
         < myShip.radius**2) || ((this.length - myShip.x)**2 + ((this.y + 20) - myShip.y)**2
             < myShip.radius**2) || (myShip.x < this.length && (this.y + 20) >= (myShip.y - 10) && this.y <= (myShip.y + 10))){
-        cb.fillStyle = 'red';
+    cb.fillStyle = 'red';
+    gameOver = true;
     }
     else {
       cb.fillStyle = 'black';
     }
+    // cb.fillStyle = leftCollision(this.length, this.y, myShip)
     cb.fillRect(0, this.y, this.length, this.height)
   }
 
@@ -162,7 +227,8 @@ function RightWall(xEdge, dy, whenToPush){
     if (((this.xEdge - myShip.x)**2 + (this.y - myShip.y)**2
         < myShip.radius**2) || ((this.xEdge - myShip.x)**2 + ((this.y + 20) - myShip.y)**2
             < myShip.radius**2) || (myShip.x > this.xEdge && (this.y + 20) >= (myShip.y - 10) && this.y <= (myShip.y + 10))){
-          cb.fillStyle = 'red';
+        cb.fillStyle = 'red';
+        gameOver = true;
     }
     else {
       cb.fillStyle = 'black';
@@ -186,43 +252,56 @@ function RightWall(xEdge, dy, whenToPush){
   }
 }
 
-function decideTunnelWidth(oldCenter, center){
-  if (center >= oldCenter + 44 || center <= oldCenter -44){
-    console.log("big")
-    return 300;
-  }
-  if (center >= oldCenter + 41 || center <= oldCenter - 41){
-    return 285;
-  }
-  if(center >= oldCenter + 38 || center <= oldCenter - 38){
-    return 275;
-  }
-  if (center >= oldCenter + 34 || center <= oldCenter - 34){
-    return 267;
-  }
-  if (center >= oldCenter + 31 || center <= oldCenter - 31){
-    console.log("needs inc")
-    return 250;
-  }
-  if (center >= oldCenter + 28 || center <= oldCenter - 28){
-    console.log("medium")
-    return 245;
-  }
-  if (center >= oldCenter + 25 || center <= oldCenter - 25){
+function ScoreBox(width, style, color){
+  this.score = 0;
+  this.x = 20;
+  this.y = 20;
+  this.color = color
+  this.font = width + style;
+  this.score = 0
 
-    return 235;
+  this.update = function(){
+
+    cb.font = this.font;
+    cb.fillStyle = this.color;
+    cb.fillText("SCORE: " + this.score, this.x, this.y);
   }
-  if (center >= oldCenter + 22 || center <= oldCenter - 22){
-    return 230;
+
+}
+
+function EndGame(){
+  this.score = 0;
+  this.x = window.innerWidth/5;
+  this.y = window.innerHeight/3;
+  this.size = innerWidth/11;
+  this.message = "YOU LOST :(";
+  this.message2 = "YOUR SCORE: ";
+  this.update = function(){
+    cb.font = this.size + "px Consolas";
+    cb.fillStyle = "red";
+    cb.fillText(this.message, this.x, this.y)
+    cb.fillText(this.message2 + this.score, this.x - 70, this.y + this.size);
   }
-  if (center >= oldCenter + 19 || center <= oldCenter - 19){
-    return 216;
+}
+
+function Restart(){
+  this.x = window.innerWidth/3;
+  this.y = window.innerHeight*0.80;
+  this.size = innerWidth/15;
+  this.message = "Restart?"
+  this.update = function(){
+    cb.font = this.size + "px Consolas";
+    cb.fillStyle = 'green';
+    cb.fillText(this.message, this.x, this.y)
   }
-  if (center >= oldCenter + 16 || center <= oldCenter - 16){
-    return 204;
-  }
-  if (center >= oldCenter + 13 || center <= oldCenter - 13){
-    return 190;
+}
+var score = new ScoreBox("20px ", "Consolas", "red")
+
+function decideTunnelWidth(oldCenter, center){
+  var diff = Math.abs(center - oldCenter)
+  if (diff >= 13){
+    var newGap = gapWhenEasy - 10 + 3.06 * diff;
+    return newGap
   }
   else {
     return gapWhenEasy;
@@ -268,10 +347,24 @@ function pushRightWall(){
   rightArray.push(new RightWall(xStart, gravity, whenToPushR));
 }
 
-var myShip = new Ship(innerWidth/2, innerHeight*0.66);
+var myShip = new Ship(innerWidth/2, innerHeight*0.66, shipRadius);
 
-window.addEventListener("mousemove", function(){
-    myShip.x = event.clientX
+var mouseOrTouch;
+
+if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+    mouseOrTouch = "touchmove";
+}
+else{
+  mouseOrTouch = "mousemove"
+}
+window.addEventListener(mouseOrTouch, function(e){
+    if (mouseOrTouch == "mousemove"){
+      myShip.x = event.clientX;
+    }
+    else {
+      var touch = e.touches[0]
+      myShip.x = touch.pageX;
+    }
 });
 
 // Initiate first walls on left and right
@@ -279,22 +372,46 @@ pushLeftWall();
 pushRightWall();
 
 // console.log(rightArray[0])
+var gameEnd = new EndGame()
+var restart = new Restart();
 
 function animate(){
-  requestAnimationFrame(animate);
-  cb.clearRect(0, 0, innerWidth, innerHeight);
-  // console.log(rightArray[0].y)
-  myShip.update();
+  if (gameOver == false) {
+    requestAnimationFrame(animate);
+    cb.clearRect(0, 0, innerWidth, innerHeight);
+    // console.log(rightArray[0].y)
+    myShip.update();
 
-  // console.log(noise.perlin2((Math.random()- 0.5), (Math.random() - 0.5))*100)
-  for(var n = 0; n < rightArray.length; n++){
-    rightArray[n].update();
-  }
-  for ( var i = 0; i < leftArray.length; i++){
-    leftArray[i].update();
-    // console.log(leftArray[rightArray.length - 1].y)
-  }
+    // console.log(noise.perlin2((Math.random()- 0.5), (Math.random() - 0.5))*100)
+    for(var n = 0; n < rightArray.length; n++){
+      rightArray[n].update();
+    }
+    for ( var i = 0; i < leftArray.length; i++){
+      leftArray[i].update();
+      // console.log(leftArray[rightArray.length - 1].y)
+    }
 
+    score.score += 1;
+    score.update();
+
+  }
+  else if (gameOver == true){
+    gameEnd.score = score.score;
+    gameEnd.update();
+    restart.update();
+    window.addEventListener("click", function(){
+      // console.log(event.clientX, event.clientY)
+      // console.log(restart.size, restart.y, restart.x)
+      var clickX = event.clientX;
+      var clickY = event.clientY;
+      if(clickX >= restart.x && clickX <= restart.x + (restart.size*5)){
+        if (clickY >= restart.y - restart.size && clickY <= restart.y){
+          location.reload();
+        }
+      }
+
+    })
+  }
 }
 
 animate();

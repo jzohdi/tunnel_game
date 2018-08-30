@@ -1,63 +1,38 @@
 
 /*
- *https://www.michaelbromley.co.uk/blog/simple-1d-noise-in-javascript/
+ *https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-1D-noise
  */
 function init(){
-var Simple1DNoise = function() {
-    var MAX_VERTICES = 256;
-    var MAX_VERTICES_MASK = MAX_VERTICES -1;
-    var amplitude = 1.0;
-    var scale = 0.025;
+function OneDNoise(max, amp, scale) {
+    this.MAX_VERTICES = 256;
+    this.MAX_VERTICES_MASK = this.MAX_VERTICES - 1;
+    this.amplitude = amp;
+    this.scale = scale;
+    this.xx = 0.1;
+    this.matrix = [];
 
-    var r = [];
-
-    for ( var i = 0; i < MAX_VERTICES; ++i ) {
-        r.push(Math.random());
+    for ( var i = 0; i < this.MAX_VERTICES; ++i ) {
+        this.matrix.push(Math.random());
     }
 
-    var getVal = function( x ){
-        var scaledX = x * scale;
-        var xFloor = Math.floor(scaledX);
-        var t = scaledX - xFloor;
-        var tRemapSmoothstep = t * t * ( 3 - 2 * t );
-
+    this.eVal = function(){
+        var x = this.xx;
+        var scaledX = x * scale, xFloor = Math.floor(scaledX), t = scaledX - xFloor;
+        var tRemapSmoothstep = (6*(t**5) - 15*(t**4) + (10*(t**3)));
+        this.xx += 1
         /// Modulo using &
-        var xMin = xFloor & MAX_VERTICES_MASK;
-        var xMax = ( xMin + 1 ) & MAX_VERTICES_MASK;
+        var xMin = xFloor & this.MAX_VERTICES_MASK, xMax = ( xMin + 1 ) & this.MAX_VERTICES_MASK;
+        var a = this.matrix[xMin], b = this.matrix[xMax]
+        return lerp( a, b, tRemapSmoothstep ) * this.amplitude;
 
-        var y = lerp( r[ xMin ], r[ xMax ], tRemapSmoothstep );
+    }
 
-        return y * amplitude;
-    };
-
-    /**
-    * Linear interpolation function.
-    * @param a The lower integer value
-    * @param b The upper integer value
-    * @param t The value between the two
-    * @returns {number}
-    */
     var lerp = function(a, b, t ) {
         return a * ( 1 - t ) + b * t;
     };
-
-    // return the API
-    return {
-        getVal: getVal,
-        setAmplitude: function(newAmplitude) {
-            amplitude = newAmplitude;
-        },
-        setScale: function(newScale) {
-            scale = newScale;
-        }
-    };
-};
-/*
- * End perlin documentation
- */
-
+}
 // Initiate canvas
-
+var generate = new OneDNoise(256, 1.0, 0.025)
 var canvas = document.getElementById('map-canvas')
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -113,7 +88,7 @@ var gapWhenEasy = scalers[2];
 
 // var center = innerWidth/2
 var center;
-var gravity = 2;
+var gravity = 5;
 var howJagged = 10;
 gameOver= false;
 // var tunnelDifficulty = 200;
@@ -312,14 +287,14 @@ function decideTunnelWidth(oldCenter, center){
 
 var leftArray = []
 
-var generator = new Simple1DNoise();
-var xx = 0.10;
+// var generator = new Simple1DNoise();
+// var xx = 0.10;
 
 function pushLeftWall(){
 
-  xx += 1;
+  // xx += 1;
   var oldCenter = center;
-  var moveTunnel = generator.getVal(xx)*innerWidth
+  var moveTunnel = generate.eVal() * window.innerWidth;
   if (moveTunnel > (gap/2) && moveTunnel < (innerWidth - (gap/2))){
     center = moveTunnel;
   }

@@ -1,11 +1,4 @@
 
-<<<<<<< HEAD
-/*
- *https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/procedural-patterns-noise-part-1/creating-simple-1D-noise
- */
-=======
- 
->>>>>>> 5a063dc91dc84148daebbc4e886675ecb5f5eb6d
 function init(){
 function OneDNoise(max, amp, scale) {
     this.MAX_VERTICES = 256;

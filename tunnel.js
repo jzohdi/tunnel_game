@@ -85,7 +85,7 @@ var gapWhenEasy = scalers[2];
 
 // var center = innerWidth/2
 var center;
-var gravity = 5;
+var gravity = 2;
 var howJagged = 10;
 gameOver= false;
 // var tunnelDifficulty = 200;

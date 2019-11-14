@@ -66,9 +66,16 @@ function init() {
   // canvas base for canvas drawing.
   const cb = canvas.getContext("2d");
 
-  const getRndInteger = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
+// var center = innerWidth/2
+var center;
+var gravity = 5;
+var howJagged = 10;
+gameOver= false;
+// var tunnelDifficulty = 200;
+// var howFar = Math.trunc(20/gravity)
+// console.log(Math.trunc(20/2.5))
+// console.log(howFar)
+// console.log(-20 + (Math.trunc(20/2.5)*2.5))
 
   const getDeci = x => {
     return parseFloat(Number.parseFloat(x).toFixed(2));

@@ -1,4 +1,38 @@
-function init() {
+// modal function for showing instructions at beggining of page load,
+// as well as at the end of the game.
+const MODAL_DIV =
+  '<div id="myModal" class="modal question-titles"><div class="modal-content main-card">' +
+  '<span class="close">X</span>' +
+  "contentPlaceHolder" +
+  "</div></div>";
+
+const createModal = (someIdOnPage, content) => {
+  const modalContent = MODAL_DIV.replace("contentPlaceHolder", content);
+  const modalHolder = document.getElementById(someIdOnPage);
+  modalHolder.innerHTML = modalContent;
+
+  const modal = document.getElementById("myModal");
+  // const openButton = document.getElementById(triggerId);
+  const span = document.getElementsByClassName("close")[0];
+  const done = document.getElementById("done-selection");
+
+  modal.style.display = "block";
+
+  span.onclick = function() {
+    modalHolder.innerHTML = "";
+    startGame();
+  };
+  done.onclick = () => {
+    span.click();
+  };
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      span.click();
+    }
+  };
+};
+
+function startGame() {
   // 1 Dimesnional Perlin Noise Function. This is used so that the tunnel can
   // move in a pseudorandom fashion while remaining smooth. Each next random position is closely
   // related to the previous positon.
@@ -340,7 +374,6 @@ function init() {
   }
 
   if (DEVICE == "mobile") {
-    // document.getElementById("DEVICEID").
     window.addEventListener("touchstart", function(e) {
       touchPosition = e.touches[0].clientX;
     });
@@ -358,10 +391,6 @@ function init() {
   // Initiate first walls on left and right
   pushLeftWall();
   pushRightWall();
-
-  // console.log(rightArray[0])
-  const gameEnd = new EndGame();
-  const restart = new Restart();
 
   const updateScoreAndPositions = () => {
     requestAnimationFrame(animate);
@@ -387,33 +416,24 @@ function init() {
     score.score += 1;
     score.update();
   };
-
+  // when the game ends. show modal. if they got a new high score show congratze, else show score and restart button.
   const updateGameToGameOver = () => {
-    gameEnd.score = score.score;
-    gameEnd.update();
-    restart.update();
-    if (DEVICE == "desk") {
-      window.addEventListener("click", function() {
-        // d
-        var clickX = event.clientX;
-        var clickY = event.clientY;
-        if (clickX >= restart.x && clickX <= restart.x + restart.size * 5) {
-          if (clickY >= restart.y - restart.size && clickY <= restart.y) {
-            location.reload();
-          }
-        }
-      });
-    } else {
-      window.addEventListener("touchstart", function(e) {
-        var clickX = e.touches[0].clientX;
-        var clickY = e.touches[0].clientY;
-        if (clickX >= restart.x && clickX <= restart.x + restart.size * 5) {
-          if (clickY >= restart.y - restart.size && clickY <= restart.y) {
-            location.reload();
-          }
-        }
-      });
+    const MAIN_CONTENT = `<h4>Game Over :(</h4><h4>Your Score: ${score.score}</h4>`;
+    const NEW_HIGH_SCORE = `<h4>Game Over :(</h4><h4>Contgratz new high score! <br/>Score: ${score.score}</h4>`;
+    const RESTART_GAME_MODAL_CONTENT = `<div id='end-game'>${
+      score.score > parseInt(localStorage.getItem("highScore"))
+        ? NEW_HIGH_SCORE
+        : MAIN_CONTENT
     }
+    <button class='button restart-button' id='done-selection'>Restart!</button>
+    </div>`;
+
+    // if the score is a new high score, set the highscore in localstorage.
+    if (score.score > parseInt(localStorage.getItem("highScore"))) {
+      localStorage.setItem("highScore", JSON.stringify(score.score));
+    }
+    createModal("modal-holder", RESTART_GAME_MODAL_CONTENT);
+    sessionStorage.setItem("gameJustEnded", "true");
   };
 
   const animate = () => {
@@ -426,5 +446,29 @@ function init() {
 
   animate();
 }
+
+const init = () => {
+  // initialzie highscore to 0 if user has not visited yet.
+  if (!localStorage.getItem("highScore")) {
+    localStorage.setItem("highScore", "0");
+  }
+  // if the user had not just played the game previously. show modal with game instructions.
+  if (!sessionStorage.getItem("gameJustEnded")) {
+    const BEGIN_GAME_MODAL_CONTENT = `<h3>Tunnel Game</h3>
+    <div id="game-instructions">
+    <h4>How To Play:</h4>
+    <p>1. Move left and right to control position: </p>
+    <p style='padding-left: 20px;'>Mobile: hold finger down anywhere on the screen</p>
+    <p style='padding-left: 20px;'>Computer: move cursor on screen</p>
+    <p>2. Don't touch the walls on the left or right!</p>
+    </div>
+    <button class='button' id='done-selection'>Start Game!</button>`;
+
+    createModal("modal-holder", BEGIN_GAME_MODAL_CONTENT);
+  } else {
+    // else start the game automatically.
+    startGame();
+  }
+};
 
 init();

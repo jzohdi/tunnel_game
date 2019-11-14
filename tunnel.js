@@ -2,46 +2,49 @@ function init() {
   // 1 Dimesnional Perlin Noise Function. This is used so that the tunnel can
   // move in a pseudorandom fashion while remaining smooth. Each next random position is closely
   // related to the previous positon.
-  function OneDNoise(max, amp, scale) {
-    this.MAX_VERTICES = 256;
-    this.MAX_VERTICES_MASK = this.MAX_VERTICES - 1;
-    this.amplitude = amp;
-    this.scale = scale;
-    this.xx = 0.1;
-    this.matrix = [];
+  class OneDNoise {
+    constructor(max, amp, scale) {
+      this.MAX_VERTICES = 256;
+      this.MAX_VERTICES_MASK = this.MAX_VERTICES - 1;
+      this.amplitude = amp;
+      this.scale = scale;
+      this.xx = 0.1;
+      this.matrix = [];
 
-    for (var i = 0; i < this.MAX_VERTICES; ++i) {
-      this.matrix.push(Math.random());
+      // load matrix.
+      for (var i = 0; i < this.MAX_VERTICES; ++i) {
+        this.matrix.push(Math.random());
+      }
     }
 
-    this.eVal = function() {
-      var x = this.xx;
-      var scaledX = x * scale,
+    eVal() {
+      let x = this.xx;
+      let scaledX = x * this.scale,
         xFloor = Math.floor(scaledX),
         t = scaledX - xFloor;
-      var tRemapSmoothstep = 6 * t ** 5 - 15 * t ** 4 + 10 * t ** 3;
+      let tRemapSmoothstep = 6 * t ** 5 - 15 * t ** 4 + 10 * t ** 3;
       this.xx += 1;
       /// Modulo using &
-      var xMin = xFloor & this.MAX_VERTICES_MASK,
+      let xMin = xFloor & this.MAX_VERTICES_MASK,
         xMax = (xMin + 1) & this.MAX_VERTICES_MASK;
-      var a = this.matrix[xMin],
+      let a = this.matrix[xMin],
         b = this.matrix[xMax];
-      return lerp(a, b, tRemapSmoothstep) * this.amplitude;
-    };
+      return this.lerp(a, b, tRemapSmoothstep) * this.amplitude;
+    }
 
-    var lerp = function(a, b, t) {
+    lerp(a, b, t) {
       return a * (1 - t) + b * t;
-    };
+    }
   }
   // Initiate canvas
-  var generate = new OneDNoise(256, 1.0, 0.025);
-  var canvas = document.getElementById("map-canvas");
+  const GENERATOR = new OneDNoise(256, 1.0, 0.025);
+  const canvas = document.getElementById("map-canvas");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  var rtime;
-  var timeout = false;
-  var delta = 300;
+  let rtime;
+  let timeout = false;
+  let delta = 300;
 
   // detect when someone has resized the screen, we don't want to reload each time as this will be
   // a massive amount of reload calls. Instead we need to detect when they resized and haven't resized
@@ -65,17 +68,11 @@ function init() {
 
   // canvas base for canvas drawing.
   const cb = canvas.getContext("2d");
+  gameOver = false;
 
-// var center = innerWidth/2
-var center;
-var gravity = 5;
-var howJagged = 10;
-gameOver= false;
-// var tunnelDifficulty = 200;
-// var howFar = Math.trunc(20/gravity)
-// console.log(Math.trunc(20/2.5))
-// console.log(howFar)
-// console.log(-20 + (Math.trunc(20/2.5)*2.5))
+  const getRndInteger = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
 
   const getDeci = x => {
     return parseFloat(Number.parseFloat(x).toFixed(2));
@@ -287,14 +284,14 @@ gameOver= false;
 
   // pushLeftWall (and pushRightWall) functions to create new walls.
   // to do so first we must:
-  // 1. generate the next perlin noise value and scale it to match the width of the screen
+  // 1. GENERATOR the next perlin noise value and scale it to match the width of the screen
   // 2. check that the new position is not too far from the previous position (this would cause the tunnel to be closed).
-  // 3. based on the new position generate the size of the gap based on the difference in the new tunnel position and the old position.
+  // 3. based on the new position GENERATOR the size of the gap based on the difference in the new tunnel position and the old position.
   //   (again if the gap was too small this would cause the tunnel to be closed).
   // 4. calculate the size of the wall based on this gap, and then create the new wall while adding it to the array of left walls.
   const pushLeftWall = () => {
     const oldCenter = CENTER;
-    const moveTunnel = generate.eVal() * window.innerWidth;
+    const moveTunnel = GENERATOR.eVal() * window.innerWidth;
     if (moveTunnel > GAP / 2 && moveTunnel < innerWidth - GAP / 2) {
       CENTER = moveTunnel;
     }
@@ -311,7 +308,7 @@ gameOver= false;
   const rightArray = [];
   let gameTimer = 1;
 
-  // while left wall functions to generate the gap for the tunnerl, push right wall functions
+  // while left wall functions to GENERATOR the gap for the tunnerl, push right wall functions
   // to speed up the game and add to the score board.
   const pushRightWall = () => {
     gameTimer += 1;
